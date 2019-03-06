@@ -8,14 +8,14 @@ const size_t init_size = 256;
 const float ratio = 0.7;
 
 template<class KeyType, class ValueType, class Hash = std::hash<KeyType>> class HashMap {
- private:
+private:
     std::list<std::pair<const KeyType, ValueType>> l;
     std::vector<char> deleted;
     std::vector<typename std::list<std::pair<const KeyType, ValueType>>::iterator> table;
     std::conditional_t<std::is_function<Hash>::value, std::add_pointer_t<Hash>, Hash> hasher;
     size_t N, table_size = 0;
 
- public:
+public:
     typedef typename std::list<std::pair<const KeyType, ValueType>>::iterator iterator;
     typedef typename std::list<std::pair<const KeyType, ValueType>>::const_iterator const_iterator;
 
@@ -44,7 +44,7 @@ template<class KeyType, class ValueType, class Hash = std::hash<KeyType>> class 
     }
 
     HashMap(std::initializer_list<std::pair<KeyType, ValueType>> init_list, Hash hh = Hash()): hasher(hh) {
-        N = max(init_size, init_list.size() * 2);
+        N = std::max(init_size, init_list.size() * 2);
         table.resize(N);
         deleted.resize(N);
 
