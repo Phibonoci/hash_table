@@ -30,8 +30,8 @@ public:
         table.resize(N);
         deleted.resize(N);
         hasher = other.hasher;
-        for (const auto &i : other)
-            insert(i);
+        for (const auto &item : other)
+            insert(item);
     }
 
     HashMap(const_iterator begin, const_iterator end, Hash hh = Hash()): hasher(hh) {
