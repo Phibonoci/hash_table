@@ -16,7 +16,7 @@ const float INCREASE_RATIO = 2, DECREASE_RATIO = 7;
 template<class KeyType, class ValueType, class Hash = std::hash<KeyType>> class HashMap {
 private:
     typedef std::list<std::pair<const KeyType, ValueType>> node_list;
-    node_list l;
+    node_list nodes;
     std::vector<char> deleted;
     std::vector<typename node_list::iterator> table;
     std::conditional_t<std::is_function<Hash>::value, std::add_pointer_t<Hash>, Hash> hasher;
@@ -67,7 +67,7 @@ public:
     }
 
     bool empty() const {
-        return l.empty();
+        return nodes.empty();
     }
 
     auto hash_function() const {
@@ -75,19 +75,19 @@ public:
     }
 
     iterator begin() {
-        return l.begin();
+        return nodes.begin();
     }
 
     const_iterator begin() const {
-        return l.cbegin();
+        return nodes.cbegin();
     }
 
     iterator end() {
-        return l.end();
+        return nodes.end();
     }
 
     const_iterator end() const {
-        return l.cend();
+        return nodes.cend();
     }
 
     void reallocate(size_t size) {
@@ -95,7 +95,7 @@ public:
         table.resize(table_size);
         deleted.resize(table_size);
         memset(deleted.data(), 0, table_size);
-        for (auto iter = l.begin(); iter != l.end(); ++iter) {
+        for (auto iter = nodes.begin(); iter != nodes.end(); ++iter) {
             for (int index = 0;; ++index) {
                 int k = (hasher(iter->first) + index) % table_size;
                 if (deleted[k] == EMPTY || deleted[k] == DELETED) {
@@ -120,8 +120,8 @@ public:
             size_t index = (hash + i) % table_size;
             if (deleted[index] == EMPTY || deleted[index] == DELETED) {
                 deleted[index] = USED;
-                l.push_back(value);
-                table[index] = (--l.end());
+                nodes.push_back(value);
+                table[index] = (--nodes.end());
                 check();
                 ++elements_count;
                 return;
@@ -136,7 +136,7 @@ public:
         for (size_t i = 0; i < table_size; ++i) {
             size_t index = (hash + i) % table_size;
             if (deleted[index] == USED && table[index]->first == key) {
-                l.erase(table[index]);
+                nodes.erase(table[index]);
                 deleted[index] = DELETED;
                 --elements_count;
                 return;
@@ -149,7 +149,7 @@ public:
     }
 
     void clear() {
-        for (auto it = l.begin(); it != l.end(); ++it) {
+        for (auto it = nodes.begin(); it != nodes.end(); ++it) {
             size_t index = hasher(it->first) % table_size;
             while (true) {
                 if (deleted[index] == EMPTY) {
@@ -161,7 +161,7 @@ public:
             }
         }
         elements_count = 0;
-        l.clear();
+        nodes.clear();
     }
 
     iterator find(const KeyType& key) {
@@ -173,10 +173,10 @@ public:
             }
 
             if (deleted[index] == EMPTY) {
-                return l.end();
+                return nodes.end();
             }
         }
-        return l.end();
+        return nodes.end();
     }
 
     const_iterator find(const KeyType& key) const {
@@ -204,10 +204,10 @@ public:
 
             if (deleted[index] == EMPTY) {
                 insert(std::make_pair(key, ValueType()));
-                return l.back().second;
+                return nodes.back().second;
             }
         }
-        return l.back().second;
+        return nodes.back().second;
     }
 
     ValueType& at(const KeyType& key) {
