@@ -11,11 +11,12 @@ enum {
 };
 
 const size_t INIT_SIZE = 256;
-const float INCREASE_RATIO = 2, DECREASE_RATIO = 7;
+const float INCREASE_RATIO = 2, DECREASE_RATIO = 7, REALLOCATION_RATIO = 2;
 
 template<class KeyType, class ValueType, class Hash = std::hash<KeyType>> class HashMap {
 private:
-    typedef std::list<std::pair<const KeyType, ValueType>> node_list;
+    typedef std::pair<const KeyType, ValueType> node;
+    typedef std::list<node> node_list;
     node_list nodes;
     std::vector<char> deleted;
     std::vector<typename node_list::iterator> table;
@@ -23,8 +24,8 @@ private:
     size_t table_size = 0, elements_count = 0;
 
 public:
-    typedef typename std::list<std::pair<const KeyType, ValueType>>::iterator iterator;
-    typedef typename std::list<std::pair<const KeyType, ValueType>>::const_iterator const_iterator;
+    typedef typename std::list<node>::iterator iterator;
+    typedef typename std::list<node>::const_iterator const_iterator;
 
     HashMap(Hash hh = Hash()): hasher(hh) {
         table_size = INIT_SIZE;
@@ -52,7 +53,7 @@ public:
         }
     }
 
-    HashMap(std::initializer_list<std::pair<KeyType, ValueType>> init_list, Hash hh = Hash()): hasher(hh) {
+    HashMap(std::initializer_list<node> init_list, Hash hh = Hash()): hasher(hh) {
         table_size = std::max(INIT_SIZE, init_list.size() * 2);
         table.resize(table_size);
         deleted.resize(table_size);
@@ -108,13 +109,14 @@ public:
     }
 
     inline void check() {
-        if (size() * INCREASE_RATIO > table_size)
-            reallocate(table_size * 2);
-        else if (size() > INIT_SIZE && size() * DECREASE_RATIO < table_size)
-            reallocate(table_size / 2);
+        if (size() * INCREASE_RATIO > table_size) {
+            reallocate(table_size * REALLOCATION_RATIO);
+        } else if (size() > INIT_SIZE && size() * DECREASE_RATIO < table_size) {
+            reallocate(table_size / REALLOCATION_RATIO);
+        }
     }
 
-    void insert(const std::pair<KeyType, ValueType>& value) {
+    void insert(const node& value) {
         size_t hash = hasher(value.first);
         for (size_t i = 0; i < table_size; ++i) {
             size_t index = (hash + i) % table_size;
